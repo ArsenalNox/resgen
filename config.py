@@ -1,3 +1,7 @@
+#host='sdonode.okeit.edu'
+#user='vlad'
+#database='schools'
+#password='P@ssw0rd'
 host='localhost'
 user='root'
 database='schools'
