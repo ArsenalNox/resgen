@@ -1,6 +1,4 @@
 import time
-
-from xlsxwriter import worksheet
 import helper
 import getter
 import writer 
@@ -36,45 +34,69 @@ for subject in getter.get_subjects(): #Iterating over all subjects
     for module in getter.get_subjects_tests(subject[0]): #Iterating over all modules of subject
         print(f'Getting results for module: {module}\n\n')
         
-        is_empty_results = False
-        cursor_row = 0
+        cursor_row = 0 #Pointer to current workign row 
+
         #create new xlsx table for this subject
         worksheet_name = str(module[3]).replace(' ', '_')
         xltable, xlsheet= writer.create_xlsx_table(working_directory_name+'/'+worksheet_name)
+
         qnum, q_info = getter.get_question_test_data(module[0])
-        pprint(q_info)
-        header_info = {
+
+        header_info = { #Information which goes into header row in excel table 
                 "test_name": f'Название теста: {module[3]}',
                 "gen_date":  datetime.datetime.now().strftime("%d.%m.%Y %H:%M"),
                 "test_question_data": helper.refine_question_data(q_info)
         }
-        cursor_row, cells_with_students_results = writer.write_header_info(xlsheet, cursor_row, header_info)
+        cursor_row, cells_with_students_results, q_num = writer.write_header_info(xlsheet, cursor_row, header_info)
         
 
-        print('Getting munipal information..') #get munipal list 
-        for munipal in getter.get_all_munipals():
-            #write munipal information 
-            writer.write_munipal_info(xlsheet, cursor_row, {'mcode': munipal[0]})
-            #remember the cells for generating formulas for statistics 
+        print('Getting munipal information..') 
+        for munipal in getter.get_all_munipals(): #get munipal list 
+            cells, cursor_row = writer.write_munipal_info(xlsheet, cursor_row, {'mcode': munipal[0]}) #write munipal information 
+            #^ remember the cells for generating formulas for statistics 
             
-            #check if munipal participated in testing, if not - dont remember 
-            
-            #get active schools of current munipal 
-            isSchoolListEmpty = True
-            for school in getter.get_schools_by_mo_in_results(munipal[0]):
+            isSchoolListEmpty = True #Flag for checking if returned list is empty, i.e. if munipal has not participated in testing 
+            for school in getter.get_schools_by_mo_in_results(munipal[0]): #get active schools of current munipal 
                 isSchoolListEmpty = False
-                #write student result, remembering the cells by number of quenstion in module 
+                
+                cells_school_level, cursor_row = writer.write_school_info(xltable, xlsheet, cursor_row, {'s_code': school[4]})
+                print(cells_school_level)
+                
                 school_result_count = 0;
-                for sresult in getter.get_students_resutls_of_school_by_test(school[0], module[0]):
-                    school_result_count += 1
+
+                for s_class in getter.get_classes_of_school_by_test(school[0], module[0]): #Get all id's of active classes
+                    print(f'Getting results of class {getter.get_class_info(s_class[0])}')
+                    #Write class info and prepare cells for formulas
+                    cells_class, cursor_row = writer.write_class_info(xltable, xlsheet, cursor_row, getter.get_class_info(s_class[0]))
+                    
+                    #get all results ids by class, school and module
+                    for sresult in getter.get_students_resutls_of_school_and_class_by_test(school[0], s_class[0], module[0]):  #get test_uid's 
+                        #get every student's result 
+                        #write student class, name, student result, remembering the cells by number of quenstion in module 
+                        student_result_data = getter.get_test_results_by_uid(sresult[0])
+                        answers             = helper.refine_student_answers(student_result_data)
+                        student_info        = getter.get_student_detailed_info(student_result_data[0][6])
+                        
+                        cells, cursor_row = writer.write_result_info(xltable, xlsheet, cursor_row, {
+                            "test_uid": sresult[0],
+                            "class":    getter.get_class_info(s_class[0])[0][2], 
+                            "name":     student_info[0][3]+' '+student_info[0][4]+' '+student_info[0][5],
+                            "answers":  answers,
+                            "q_num":    q_num
+                            })
+
+                        school_result_count += 1
+                #write formulas for class statistics
                 print(f'Results in school {school[2]}: {school_result_count}')
 
-            if isSchoolListEmpty:
+            if isSchoolListEmpty: #
                 print(f'Munipal {munipal[0]} ({munipal[1]}) has not participated in testing')
 
             print('\n')
 
-        #write result to file, close it 
-        xltable.close()
-        if is_empty_results:
-            print('No results were found')
+        #write formulas for school
+        #write formulas for munipals 
+        #write formulas for unified stats 
+        xltable.close() #close file 
+
+    break 

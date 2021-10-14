@@ -135,7 +135,7 @@ def get_subjects_tests(sbjid:int)->list:
     return result
 
 
-def get_students_resutls_of_school_by_test(sid:int, testid:int):
+def get_students_resutls_of_school_and_class_by_test(sid:int, cid:int, testid:int):
     """
     Получает результаты школы по модулю 
     """
@@ -143,18 +143,38 @@ def get_students_resutls_of_school_by_test(sid:int, testid:int):
     sqlCon, cur = create_database_connection()
     sql = f"""
     SELECT 
-        * 
+            distinct(test_uid)
     FROM results 
     LEFT JOIN students ON results.student=students.id
     LEFT JOIN classes ON students.cid=classes.id
     WHERE 
         results.sid = {sid} AND 
-        results.mid = {testid}
-    
+        results.mid = {testid} AND 
+        classes.id  = {cid}
     """
     cur.execute(sql)
     result = cur.fetchall()
     sqlCon.close()
+    return result
+
+
+def get_test_results_by_uid(uid:str):
+    """
+    Получает резульаты конкретного модуля 
+    """
+    sqlCon, cur = create_database_connection()
+    sql = f"""
+    SELECT
+        *
+    FROM results
+    LEFT JOIN modules_questions ON results.qid=modules_questions.id 
+    WHERE test_uid = '{uid}'
+    ORDER BY q_num
+    """
+    cur.execute(sql)
+    result = cur.fetchall()
+    sqlCon.close()
+
     return result
 
 
@@ -182,10 +202,70 @@ def get_question_test_data(mid:int):
         modules_questions.correct_answ,
         question_types.name as 'q_type_name'
     FROM modules_questions
-    LEFT JOIN question_types ON modules_questions.q_type=question_types.id;
+    LEFT JOIN question_types ON modules_questions.q_type=question_types.id
+    WHERE mid = {mid}
     """
     cur.execute(sql)
     result = cur.fetchall()
     sqlCon.close()
     return qnum, result
 
+
+def get_student_detailed_info(sid:int):
+    """
+    Получить информацию о студенте 
+    """
+
+    sqlCon, cur = create_database_connection()
+    sql = f"""
+    SELECT 
+        *
+    FROM students 
+    LEFT JOIN classes ON students.cid = classes.id 
+    WHERE students.id = {sid}
+    """
+
+    cur.execute(sql)
+    result = cur.fetchall()
+    sqlCon.close()
+    return result
+
+def get_classes_of_school_by_test(sid:int, testid:int):
+    """
+    Получает все классы, которые решали данный тест от школы 
+    """
+
+    sqlCon, cur = create_database_connection()
+    sql = f"""
+    SELECT 
+        distinct(classes.id)
+    FROM results 
+    LEFT JOIN students ON results.student=students.id
+    LEFT JOIN classes  ON students.cid=classes.id
+    WHERE 
+        results.sid = {sid} AND 
+        results.mid = {testid}
+    """
+    cur.execute(sql)
+    result = cur.fetchall()
+    sqlCon.close()
+    return result
+
+
+def get_class_info(sid:int) -> list:
+    """
+    Получает все классы, которые решали данный тест от школы 
+    """
+
+    sqlCon, cur = create_database_connection()
+    sql = f"""
+    SELECT 
+        *
+    FROM classes 
+    WHERE 
+        classes.id = {sid} 
+    """
+    cur.execute(sql)
+    result = cur.fetchall()
+    sqlCon.close()
+    return result
