@@ -1,7 +1,7 @@
 import xlsxwriter
 import os
 import sys
-from xlsxwriter.utility   import xl_rowcol_to_cell 
+from xlsxwriter.utility   import xl_cell_to_rowcol, xl_rowcol_to_cell 
 
 from xlsxwriter.workbook  import Workbook
 from xlsxwriter.worksheet import Worksheet
@@ -52,12 +52,16 @@ def write_header_info(worksheet: Worksheet, cursor_row:int, data:dict) -> Tuple[
     return cursor_row, [cell], q_num
 
 
-def write_munipal_info(worksheet: Worksheet, cursor_row: int, data:dict) -> Tuple[dict, int]:
+def write_munipal_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int, data:dict) -> Tuple[dict, int]:
     """
     Записывает информацию о муниципалитете 
     """
-
-    worksheet.write(cursor_row, 0, f'Муниципалитет {data["mcode"]}')
+    
+    format_bold = workbook.add_format()
+    format_bold.set_bold()
+    
+    worksheet.write(cursor_row, 1, f'Муниципалитет {data["mcode"]}, % правильных ответов')
+    worksheet.set_row(cursor_row, None, format_bold)
 
     cell = xl_rowcol_to_cell(cursor_row, 1)
     cursor_row+=1
@@ -73,20 +77,29 @@ def write_school_info(workbook: Workbook ,worksheet: Worksheet, cursor_row: int,
     format_borders.set_top(6)
     format_borders.set_bold()
 
+    format_bold = workbook.add_format()
+    format_bold.set_bold()
+    format_bold.set_bottom(8)
+    format_bold.set_top(8)
+
+    format_background = workbook.add_format()
+    format_background.set_bg_color('ffc000')
+
     worksheet.write(cursor_row, 1, 'Код школы')
     worksheet.write(cursor_row, 2, data['s_code'])
-    worksheet.write(cursor_row+1, 1, 'Итого ответов')
-    worksheet.write(cursor_row+2, 1, 'Правильных ответов')
+    worksheet.write(cursor_row+1, 1, 'Итого ответов', format_background)
+    worksheet.write(cursor_row+2, 1, 'Правильных ответов', format_background)
 
     cell = xl_rowcol_to_cell(cursor_row, 2)
-    
-    worksheet.set_row(cursor_row, cell_format=format_borders)
+    worksheet.set_row(cursor_row,   None, format_bold)
+    worksheet.set_row(cursor_row+1, None, None, {'level': 2})
+    worksheet.set_row(cursor_row+2, None, None, {'level': 2})
     cursor_row+=3
     
     return {"mun_cells_formula_start": [cell]}, cursor_row
 
 
-def write_result_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int, data:dict) -> Tuple[dict, int]:
+def write_result_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int, data:dict) -> Tuple[str, int]:
     """
     Записывает информацию о результате ученика вместе с его классом и именем 
     """
@@ -94,10 +107,13 @@ def write_result_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int,
     worksheet.write(cursor_row, cursor_col-1, data['test_uid'])
     worksheet.write(cursor_row, cursor_col,   data['class'])
     worksheet.write(cursor_row, cursor_col+1, data['name'])
+    
+    worksheet.set_row(cursor_row,   None, None, {'level': 2})
+
     cursor_col+=1
 
     writen_results = []
-    cell_start = xl_rowcol_to_cell(cursor_row, cursor_col+1)
+    cell_start = str(xl_rowcol_to_cell(cursor_row, cursor_col+1))
 
     for answer in data['answers']: #Writing answer given by student
         writen_results.append(answer)
@@ -109,7 +125,7 @@ def write_result_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int,
 
     cell_end = xl_rowcol_to_cell(cursor_row, cursor_col+data['q_num'])
 
-    #Writing conditional formatting
+    #Writing formatting
     green_format = workbook.add_format({'bg_color': '00dd00'})
     red_format   = workbook.add_format({'bg_color': 'dd0000'})
     
@@ -125,36 +141,65 @@ def write_result_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int,
 
     cursor_row += 1
 
-    return {"mun_cells_formula_start": ['A1']}, cursor_row
+    return cell_start, cursor_row
 
 
-def write_class_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int, data:list):
+def write_class_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int, data:list)->Tuple[dict, int]:
     """
     Записывает информацию о классе и размечает место под статистику класса 
     """
     class_fromat = workbook.add_format()
-    class_fromat.set_top(2)
-    class_fromat.set_bottom(2)
-
+    class_fromat.set_top(7)
+    class_fromat.set_bottom(7)
 
     worksheet.write(cursor_row,   2, f'Класс {data[0][2]}, % правильных ответов')
     worksheet.write(cursor_row+1, 2, 'Правильных ответов')
     worksheet.write(cursor_row+2, 2, 'Неправильных ответов')
+
+    worksheet.set_row(cursor_row, None, class_fromat, {'level': 1})
+    worksheet.set_row(cursor_row+1, None, None, {'level': 2})
+    worksheet.set_row(cursor_row+2, None, None, {'level': 2})
     
     cells = {}
-    cells['class_percent']   = xl_rowcol_to_cell(cursor_row, 2)
-    cells['class_correct']   = xl_rowcol_to_cell(cursor_row+1, 2)
-    cells['class_incorrect'] = xl_rowcol_to_cell(cursor_row+2, 2)
+    cells['class_percent']   = xl_rowcol_to_cell(cursor_row, 3)
+    cells['class_correct']   = xl_rowcol_to_cell(cursor_row+1, 3)
+    cells['class_incorrect'] = xl_rowcol_to_cell(cursor_row+2, 3)
 
-    worksheet.set_row(cursor_row, cell_format=class_fromat)
 
     cursor_row+=3 
 
 
     return cells, cursor_row
 
-def write_formulas():
-    pass
+def write_class_formula(workbook: Workbook, worksheet: Worksheet, cursor_row: int, data:dict):
+    cell_format = workbook.add_format()
+    cell_format.set_num_format(9)
+
+    cell1, cell2 = data['data_cells'][0], data['data_cells'][1]
+ 
+    rowC, colC = xl_cell_to_rowcol(data['class_correct'])
+    rowI, colI = xl_cell_to_rowcol(data['class_incorrect'])
+    rowP, colP = xl_cell_to_rowcol(data['class_percent'])
+   
+    for i in range(0, data['q_num'], +1):
+
+        data['data_cells'][0] = increment_cell_col(cell1, i)
+        data['data_cells'][1] = increment_cell_col(cell2, i)
+
+        worksheet.write(rowP, colP+i, f'={increment_cell_col(data["class_correct"], i)}/{increment_cell_col(data["class_incorrect"], i)}', cell_format)
+        worksheet.write(rowC, colC+i, f'=COUNTIF({data["data_cells"][0]}:{data["data_cells"][1]}, "1")')
+        worksheet.write(rowI, colI+i, f'=COUNTIF({data["data_cells"][0]}:{data["data_cells"][1]}, "0")')
+
+    return
+
+
+def increment_cell_col(cell:str, increment:int) -> str:
+    row, col = xl_cell_to_rowcol(cell)
+    col += increment
+
+    inc = str(xl_rowcol_to_cell(row, col))
+
+    return inc
 
 
 if __name__ == '__main__':

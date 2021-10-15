@@ -1,6 +1,8 @@
 import mysql.connector
+from retry_decorator.retry_decorator import retry
 import config
 
+@retry(Exception, tries=3, timeout_secs=1)
 def create_database_connection():
     """
     Создает подключение к базе данных 
@@ -252,7 +254,7 @@ def get_classes_of_school_by_test(sid:int, testid:int):
     return result
 
 
-def get_class_info(sid:int) -> list:
+def get_class_info(cid:int) -> list:
     """
     Получает все классы, которые решали данный тест от школы 
     """
@@ -263,7 +265,7 @@ def get_class_info(sid:int) -> list:
         *
     FROM classes 
     WHERE 
-        classes.id = {sid} 
+        classes.id = {cid} 
     """
     cur.execute(sql)
     result = cur.fetchall()
