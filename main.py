@@ -1,4 +1,5 @@
 import time
+from mysql.connector.utils import print_buffer
 
 from xlsxwriter.utility import xl_rowcol_to_cell
 import helper
@@ -21,9 +22,12 @@ print(f'generating results to {working_directory_name}')
 
 print('Getting subjects...')
 for subject in getter.get_subjects(): #Iterating over all subjects 
+    if subject[0] == 1:
+        continue
 
     print(f'getting subjects tests {subject}\n')
     for module in getter.get_subjects_tests(subject[0]): #Iterating over all modules of subject
+
         print(f'Getting results for module: {module}\n\n')
         
         cursor_row = 0 #Pointer to current workign row 
@@ -50,6 +54,7 @@ for subject in getter.get_subjects(): #Iterating over all subjects
             cells_munipal_schools = []
             isSchoolListEmpty = True #Flag for checking if returned list is empty, i.e. if munipal has not participated in testing 
             for school in getter.get_schools_by_mo_in_results(munipal[0]): #get active schools of current munipal 
+                print(f'Writing school {school[2]}')
                 isSchoolListEmpty = False
 
                 if len(getter.get_classes_of_school_by_test(school[0], module[0])) == 0:
@@ -61,6 +66,7 @@ for subject in getter.get_subjects(): #Iterating over all subjects
                 cells_class = {}
 
                 for s_class in getter.get_classes_of_school_by_test(school[0], module[0]): #Get all id's of active classes
+                    print(f'Writing class {getter.get_class_info(s_class[0])}')
                     #Write class info and prepare cells for formulas
                     cells_class, cursor_row = writer.write_class_info(xltable, xlsheet, cursor_row, getter.get_class_info(s_class[0]))
                     
@@ -109,7 +115,7 @@ for subject in getter.get_subjects(): #Iterating over all subjects
                     'q_num':       q_num
                     })
                 cells_munipal_schools.append(cells_munipal_school)
-
+                print('Done!')
             #write munipal stat, get cells for 
             cell_final = writer.write_munipal_formula(xltable, xlsheet, {
                 "q_num":       q_num,
@@ -125,3 +131,5 @@ for subject in getter.get_subjects(): #Iterating over all subjects
             "q_num": q_num
             })
         xltable.close() #close file 
+        break
+    break
