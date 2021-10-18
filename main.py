@@ -1,4 +1,6 @@
 import time
+
+from xlsxwriter.utility import xl_rowcol_to_cell
 import helper
 import getter
 import writer 
@@ -20,7 +22,7 @@ print(f'generating results to {working_directory_name}')
 print('Getting subjects...')
 for subject in getter.get_subjects(): #Iterating over all subjects 
 
-    print('getting subjects tests\n')
+    print(f'getting subjects tests {subject}\n')
     for module in getter.get_subjects_tests(subject[0]): #Iterating over all modules of subject
         print(f'Getting results for module: {module}\n\n')
         
@@ -41,10 +43,11 @@ for subject in getter.get_subjects(): #Iterating over all subjects
         
 
         print('Getting munipal information..') 
+        cells_final = []
         for munipal in getter.get_all_munipals(): #get munipal list 
-            cells, cursor_row = writer.write_munipal_info(xltable, xlsheet, cursor_row, {'mcode': munipal[0]}) #write munipal information 
+            cells_munipal_level, cursor_row = writer.write_munipal_info(xltable, xlsheet, cursor_row, {'mcode': munipal[0]}) #write munipal information 
             #^ remember the cells for generating formulas for statistics 
-            
+            cells_munipal_schools = []
             isSchoolListEmpty = True #Flag for checking if returned list is empty, i.e. if munipal has not participated in testing 
             for school in getter.get_schools_by_mo_in_results(munipal[0]): #get active schools of current munipal 
                 isSchoolListEmpty = False
@@ -53,6 +56,7 @@ for subject in getter.get_subjects(): #Iterating over all subjects
                    continue
 
                 cells_school_level, cursor_row = writer.write_school_info(xltable, xlsheet, cursor_row, {'s_code': school[4]})
+                cells_school_classes = []
                 school_result_count = 0;
                 cells_class = {}
 
@@ -95,15 +99,29 @@ for subject in getter.get_subjects(): #Iterating over all subjects
                     #write formulas for class statistic
                     cells_class['q_num']      = q_num
                     cells_class['data_cells'] = [firstCell, lastCell]
-                    writer.write_class_formula(xltable, xlsheet, 1, cells_class)
-                    
-                print(f'Starting cell for class {firstCell}, last cell {lastCell}, writing in cell {cells_class}')
-                print(f'Results in school {school[2]}: {school_result_count}')
-            print('\n')
+                    ccell1, ccell2 = writer.write_class_formula(xltable, xlsheet, 1, cells_class) #get cells with classes stat 
+                    cells_school_classes.append(xl_rowcol_to_cell(ccell1, ccell2))
 
-        #write formulas for school
-        #write formulas for munipals 
+                #write school stat, get cells for munipal stat 
+                cells_munipal_school = writer.write_school_formula(xltable, xlsheet, {
+                    'school_cell': cells_school_level,
+                    'classes':     cells_school_classes,
+                    'q_num':       q_num
+                    })
+                cells_munipal_schools.append(cells_munipal_school)
+
+            #write munipal stat, get cells for 
+            cell_final = writer.write_munipal_formula(xltable, xlsheet, {
+                "q_num":       q_num,
+                "school_data": cells_munipal_schools,
+                "mun":         cells_munipal_level
+                })
+            print(f'Done writing munipal {munipal[1]}')
+            cells_final.append(cell_final)
         #write formulas for unified stats 
+        writer.write_final_formula(xltable, xlsheet, {
+            "cells": cells_final,
+            "start": "D2",
+            "q_num": q_num
+            })
         xltable.close() #close file 
-        break
-    break

@@ -129,7 +129,7 @@ def get_subjects_tests(sbjid:int)->list:
     SELECT 
         * 
     FROM modules 
-    WHERE id = {sbjid}
+    WHERE subject = {sbjid}
     """
     cur.execute(sql)
     result = cur.fetchall()
@@ -271,3 +271,9 @@ def get_class_info(cid:int) -> list:
     result = cur.fetchall()
     sqlCon.close()
     return result
+
+if __name__ == '__main__':
+    print(get_subjects())
+    for subj in get_subjects():
+        print(subj[0])
+        print(get_subjects_tests(subj[0]))

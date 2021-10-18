@@ -1,3 +1,4 @@
+from pprint import pprint
 import xlsxwriter
 import os
 import sys
@@ -35,6 +36,10 @@ def write_header_info(worksheet: Worksheet, cursor_row:int, data:dict) -> Tuple[
 
     worksheet.write(cursor_row, 0, data['test_name'])
     worksheet.write(cursor_row, 1, data['gen_date'])
+    worksheet.write(cursor_row+1, 1, '% выполнения')
+    worksheet.write(cursor_row+2, 1, 'Всего правильных')
+    worksheet.write(cursor_row+3, 1, 'Всего неправильных')
+
     working_col = 3
 
     start_row = cursor_row
@@ -47,12 +52,12 @@ def write_header_info(worksheet: Worksheet, cursor_row:int, data:dict) -> Tuple[
         working_col+=1 
         q_num+=1
 
-    cursor_row += 2
+    cursor_row += 4
 
     return cursor_row, [cell], q_num
 
 
-def write_munipal_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int, data:dict) -> Tuple[dict, int]:
+def write_munipal_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int, data:dict) -> Tuple[str, int]:
     """
     Записывает информацию о муниципалитете 
     """
@@ -61,14 +66,18 @@ def write_munipal_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int
     format_bold.set_bold()
     
     worksheet.write(cursor_row, 1, f'Муниципалитет {data["mcode"]}, % правильных ответов')
+    worksheet.write(cursor_row+1, 1, f'Всего правильных')
+    worksheet.write(cursor_row+2, 1, f'Всего неправильных')
+    worksheet.set_row(cursor_row+1, None, None, {'level': 2})
+    worksheet.set_row(cursor_row+2, None, None, {'level': 2})
     worksheet.set_row(cursor_row, None, format_bold)
 
-    cell = xl_rowcol_to_cell(cursor_row, 1)
-    cursor_row+=1
+    cell = str(xl_rowcol_to_cell(cursor_row, 1))
+    cursor_row+=3
         
-    return {"mun_cells_formula_start": [cell]}, cursor_row
+    return cell, cursor_row
 
-def write_school_info(workbook: Workbook ,worksheet: Worksheet, cursor_row: int, data:dict) -> Tuple[dict, int]:
+def write_school_info(workbook: Workbook ,worksheet: Worksheet, cursor_row: int, data:dict) -> Tuple[str, int]:
     """
     Записывает информацию о школе 
     """
@@ -85,18 +94,18 @@ def write_school_info(workbook: Workbook ,worksheet: Worksheet, cursor_row: int,
     format_background = workbook.add_format()
     format_background.set_bg_color('ffc000')
 
-    worksheet.write(cursor_row, 1, 'Код школы')
-    worksheet.write(cursor_row, 2, data['s_code'])
+    worksheet.write(cursor_row, 1, f'Код школы, {data["s_code"]}')
+    worksheet.write(cursor_row, 2, 'процент правильных')
     worksheet.write(cursor_row+1, 1, 'Итого ответов', format_background)
     worksheet.write(cursor_row+2, 1, 'Правильных ответов', format_background)
 
-    cell = xl_rowcol_to_cell(cursor_row, 2)
+    cell = str(xl_rowcol_to_cell(cursor_row, 2))
     worksheet.set_row(cursor_row,   None, format_bold)
     worksheet.set_row(cursor_row+1, None, None, {'level': 2})
     worksheet.set_row(cursor_row+2, None, None, {'level': 2})
     cursor_row+=3
     
-    return {"mun_cells_formula_start": [cell]}, cursor_row
+    return cell, cursor_row
 
 
 def write_result_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int, data:dict) -> Tuple[str, int]:
@@ -104,7 +113,7 @@ def write_result_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int,
     Записывает информацию о результате ученика вместе с его классом и именем 
     """
     cursor_col = 1
-    worksheet.write(cursor_row, cursor_col-1, data['test_uid'])
+    #worksheet.write(cursor_row, cursor_col-1, data['test_uid'])
     worksheet.write(cursor_row, cursor_col,   data['class'])
     worksheet.write(cursor_row, cursor_col+1, data['name'])
     
@@ -172,6 +181,9 @@ def write_class_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int, 
     return cells, cursor_row
 
 def write_class_formula(workbook: Workbook, worksheet: Worksheet, cursor_row: int, data:dict):
+    """
+    Записывает формулы в ячейки классов 
+    """
     cell_format = workbook.add_format()
     cell_format.set_num_format(9)
 
@@ -186,12 +198,123 @@ def write_class_formula(workbook: Workbook, worksheet: Worksheet, cursor_row: in
         data['data_cells'][0] = increment_cell_col(cell1, i)
         data['data_cells'][1] = increment_cell_col(cell2, i)
 
-        worksheet.write(rowP, colP+i, f'={increment_cell_col(data["class_correct"], i)}/{increment_cell_col(data["class_incorrect"], i)}', cell_format)
+        worksheet.write(rowP, colP+i, f'=IFERROR({increment_cell_col(data["class_correct"], i)}/{increment_cell_col(data["class_incorrect"], i)}, {increment_cell_col(data["class_correct"], i)})', cell_format)
         worksheet.write(rowC, colC+i, f'=COUNTIF({data["data_cells"][0]}:{data["data_cells"][1]}, "1")')
         worksheet.write(rowI, colI+i, f'=COUNTIF({data["data_cells"][0]}:{data["data_cells"][1]}, "0")')
 
-    return
+        worksheet.conditional_format(
+                increment_cell_col(data['class_percent'], i),
+                {
+                    "type": '3_color_scale',
+                    "min_color": 'red',
+                    "mid_color": 'yellow',
+                    "max_color": 'green',
+                    "mid_value": '50'
+                    }
+            )
 
+
+    return rowP, colP 
+
+
+def write_school_formula(workbook: Workbook, worksheet: Worksheet, data:dict):
+    """
+    Записывает формулы в ячейки школ 
+    """
+        
+    for i in range(1, data['q_num']+1, +1):
+        worksheet.write(
+                increment_cell_col(data['school_cell'], i), 
+                f'=IFERROR(AVERAGE({",".join(increment_cell_col_array(data["classes"], i-1))}), 0)')
+
+        worksheet.conditional_format(
+                increment_cell_col(data['school_cell'], i),
+                {
+                    "type": '3_color_scale',
+                    "min_color": 'red',
+                    "mid_color": 'yellow',
+                    "max_color": 'green',
+                    "mid_value": '50'
+                    }
+            )
+        
+        worksheet.write(
+            increment_cell_col(increment_cell_row(data['school_cell'], 1), i),
+            f"={'+'.join(increment_cell_col_array(increment_cell_row_array(data['classes'], 1), i))}"
+            )
+        
+        worksheet.write(
+            increment_cell_col(increment_cell_row(data['school_cell'], 2), i),
+            f"={'+'.join(increment_cell_col_array(increment_cell_row_array(data['classes'], 2), i))}"
+            )
+
+    return data['school_cell']
+
+
+def write_munipal_formula(workbook: Workbook, worksheet: Worksheet, data:dict):
+
+    for i in range(1, data['q_num']+1, +1):
+        worksheet.write(
+                increment_cell_col(data['mun'], i+1), 
+                f'=IFERROR(AVERAGE({",".join(increment_cell_col_array(data["school_data"], i))}), 0)')
+
+        worksheet.conditional_format(
+                increment_cell_col(data['mun'], i+1),
+                {
+                    "type": '3_color_scale',
+                    "min_color": 'red',
+                    "mid_color": 'yellow',
+                    "max_color": 'green',
+                    "mid_value": '50'
+                    }
+            )
+        
+        worksheet.write(
+            increment_cell_col(increment_cell_row(data['mun'], 1), i+1),
+            f"={'+'.join(increment_cell_col_array(increment_cell_row_array(data['school_data'], 1), i))}"
+            )
+        
+        worksheet.write(
+            increment_cell_col(increment_cell_row(data['mun'], 2), i+1),
+            f"={'+'.join(increment_cell_col_array(increment_cell_row_array(data['school_data'], 2), i))}"
+            )
+
+    return data['mun']
+
+
+def write_final_formula(workbook: Workbook, worksheet: Worksheet, data:dict):
+
+    cell_format = workbook.add_format()
+    cell_format.set_num_format(9)
+
+    for i in range(0, data['q_num'], +1):
+        worksheet.write(
+                increment_cell_col(data['start'], i), 
+                f'=IFERROR(AVERAGE({",".join(increment_cell_col_array(data["cells"], i+2))}), 0)',
+                cell_format)
+
+        worksheet.conditional_format(
+                increment_cell_col(data['start'], i),
+                {
+                    "type": '3_color_scale',
+                    "min_color": 'red',
+                    "mid_color": 'yellow',
+                    "max_color": 'green',
+                    "mid_value": '50'
+                    }
+            )
+        
+        worksheet.write(
+            increment_cell_col(increment_cell_row(data['start'], 1), i),
+            f"={'+'.join(increment_cell_col_array(increment_cell_row_array(data['cells'], 1), i+2))}"
+            )
+        
+        worksheet.write(
+            increment_cell_col(increment_cell_row(data['start'], 2), i),
+            f"={'+'.join(increment_cell_col_array(increment_cell_row_array(data['cells'], 2), i+2))}"
+            )
+
+    return 
 
 def increment_cell_col(cell:str, increment:int) -> str:
     row, col = xl_cell_to_rowcol(cell)
@@ -200,6 +323,31 @@ def increment_cell_col(cell:str, increment:int) -> str:
     inc = str(xl_rowcol_to_cell(row, col))
 
     return inc
+
+
+def increment_cell_row(cell:str, increment:int) -> str:
+    row, col = xl_cell_to_rowcol(cell)
+    row += increment
+    
+    inc = str(xl_rowcol_to_cell(row, col))
+
+    return inc
+
+
+def increment_cell_row_array(cells:list, increment:int) -> list[str]:
+    arr_new = []
+    for cell in cells:
+        arr_new.append(increment_cell_row(cell, increment))
+
+    return arr_new
+
+
+def increment_cell_col_array(cells:list, increment:int) -> list[str]:
+    arr_new = []
+    for cell in cells:
+        arr_new.append(increment_cell_col(cell, increment))
+
+    return arr_new
 
 
 if __name__ == '__main__':
