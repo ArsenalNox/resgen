@@ -22,8 +22,6 @@ print(f'generating results to {working_directory_name}')
 
 print('Getting subjects...')
 for subject in getter.get_subjects(): #Iterating over all subjects 
-    if subject[0] == 1:
-        continue
 
     print(f'getting subjects tests {subject}\n')
     for module in getter.get_subjects_tests(subject[0]): #Iterating over all modules of subject
@@ -66,7 +64,7 @@ for subject in getter.get_subjects(): #Iterating over all subjects
                 cells_class = {}
 
                 for s_class in getter.get_classes_of_school_by_test(school[0], module[0]): #Get all id's of active classes
-                    print(f'Writing class {getter.get_class_info(s_class[0])}')
+                    #print(f'Writing class {getter.get_class_info(s_class[0])}')
                     #Write class info and prepare cells for formulas
                     cells_class, cursor_row = writer.write_class_info(xltable, xlsheet, cursor_row, getter.get_class_info(s_class[0]))
                     

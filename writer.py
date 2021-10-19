@@ -197,21 +197,29 @@ def write_class_formula(workbook: Workbook, worksheet: Worksheet, cursor_row: in
 
         data['data_cells'][0] = increment_cell_col(cell1, i)
         data['data_cells'][1] = increment_cell_col(cell2, i)
+        
+        cell_c_answ = increment_cell_col(data["class_correct"], i)
+        cell_w_answ = increment_cell_col(data["class_incorrect"], i)
 
-        worksheet.write(rowP, colP+i, f'=IFERROR({increment_cell_col(data["class_correct"], i)}/{increment_cell_col(data["class_incorrect"], i)}, {increment_cell_col(data["class_correct"], i)})', cell_format)
+        worksheet.write(rowP, colP+i, f'=IFERROR({cell_c_answ}/({cell_w_answ}+{cell_c_answ}), 1)', cell_format)
         worksheet.write(rowC, colC+i, f'=COUNTIF({data["data_cells"][0]}:{data["data_cells"][1]}, "1")')
         worksheet.write(rowI, colI+i, f'=COUNTIF({data["data_cells"][0]}:{data["data_cells"][1]}, "0")')
 
-        worksheet.conditional_format(
-                increment_cell_col(data['class_percent'], i),
-                {
-                    "type": '3_color_scale',
-                    "min_color": 'red',
-                    "mid_color": 'yellow',
-                    "max_color": 'green',
-                    "mid_value": '50'
-                    }
-            )
+    worksheet.conditional_format(
+            f'{data["class_percent"]}:{increment_cell_col(data["class_percent"], data["q_num"])}',
+            {
+                "type": '3_color_scale',
+                "min_color": 'red',
+                "mid_color": 'yellow',
+                "max_color": 'green',
+                "mid_value": '50%',
+                "max_value": '100%',
+                "min_value": '0%',
+                "min_type":  'percent',
+                "min_value": 'percent',
+                "min_value": 'percent'
+                }
+        )
 
 
     return rowP, colP 
@@ -222,10 +230,14 @@ def write_school_formula(workbook: Workbook, worksheet: Worksheet, data:dict):
     Записывает формулы в ячейки школ 
     """
         
+    cell_format = workbook.add_format()
+    cell_format.set_num_format(9)
+
     for i in range(1, data['q_num']+1, +1):
         worksheet.write(
                 increment_cell_col(data['school_cell'], i), 
-                f'=IFERROR(AVERAGE({",".join(increment_cell_col_array(data["classes"], i-1))}), 0)')
+                f'=IFERROR(AVERAGE({",".join(increment_cell_col_array(data["classes"], i-1))}), 0)',
+                cell_format)
 
         worksheet.conditional_format(
                 increment_cell_col(data['school_cell'], i),
@@ -253,10 +265,14 @@ def write_school_formula(workbook: Workbook, worksheet: Worksheet, data:dict):
 
 def write_munipal_formula(workbook: Workbook, worksheet: Worksheet, data:dict):
 
+    cell_format = workbook.add_format()
+    cell_format.set_num_format(9)
+
     for i in range(1, data['q_num']+1, +1):
         worksheet.write(
                 increment_cell_col(data['mun'], i+1), 
-                f'=IFERROR(AVERAGE({",".join(increment_cell_col_array(data["school_data"], i))}), 0)')
+                f'=IFERROR(AVERAGE({",".join(increment_cell_col_array(data["school_data"], i))}), 0)',
+                cell_format)
 
         worksheet.conditional_format(
                 increment_cell_col(data['mun'], i+1),
@@ -292,7 +308,7 @@ def write_final_formula(workbook: Workbook, worksheet: Worksheet, data:dict):
                 increment_cell_col(data['start'], i), 
                 f'=IFERROR(AVERAGE({",".join(increment_cell_col_array(data["cells"], i+2))}), 0)',
                 cell_format)
-
+        
         worksheet.conditional_format(
                 increment_cell_col(data['start'], i),
                 {
