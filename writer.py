@@ -215,9 +215,9 @@ def write_class_formula(workbook: Workbook, worksheet: Worksheet, cursor_row: in
                 "mid_value": '50%',
                 "max_value": '100%',
                 "min_value": '0%',
-                "min_type":  'percent',
-                "min_value": 'percent',
-                "min_value": 'percent'
+                "min_type": 'num',
+                "max_type": 'num',
+                "mid_type": 'num'
                 }
         )
 
@@ -242,22 +242,27 @@ def write_school_formula(workbook: Workbook, worksheet: Worksheet, data:dict):
         worksheet.conditional_format(
                 increment_cell_col(data['school_cell'], i),
                 {
-                    "type": '3_color_scale',
-                    "min_color": 'red',
-                    "mid_color": 'yellow',
-                    "max_color": 'green',
-                    "mid_value": '50'
-                    }
+                "type": '3_color_scale',
+                "min_color": 'red',
+                "mid_color": 'yellow',
+                "max_color": 'green',
+                "min_value": '0%',
+                "mid_value": '50%',
+                "max_value": '100%',
+                "min_type": 'num',
+                "mid_type": 'num',
+                "max_type": 'num'
+                }
             )
         
         worksheet.write(
             increment_cell_col(increment_cell_row(data['school_cell'], 1), i),
-            f"={'+'.join(increment_cell_col_array(increment_cell_row_array(data['classes'], 1), i))}"
+            f"={'+'.join(increment_cell_col_array(increment_cell_row_array(data['classes'], 1), i-1))}"
             )
         
         worksheet.write(
             increment_cell_col(increment_cell_row(data['school_cell'], 2), i),
-            f"={'+'.join(increment_cell_col_array(increment_cell_row_array(data['classes'], 2), i))}"
+            f"={'+'.join(increment_cell_col_array(increment_cell_row_array(data['classes'], 2), i-1))}"
             )
 
     return data['school_cell']
@@ -277,12 +282,17 @@ def write_munipal_formula(workbook: Workbook, worksheet: Worksheet, data:dict):
         worksheet.conditional_format(
                 increment_cell_col(data['mun'], i+1),
                 {
-                    "type": '3_color_scale',
-                    "min_color": 'red',
-                    "mid_color": 'yellow',
-                    "max_color": 'green',
-                    "mid_value": '50'
-                    }
+                "type": '3_color_scale',
+                "min_color": 'red',
+                "mid_color": 'yellow',
+                "max_color": 'green',
+                "mid_value": '50%',
+                "max_value": '100%',
+                "min_value": '0%',
+                "min_type": 'num',
+                "max_type": 'num',
+                "mid_type": 'num'
+                }
             )
         
         worksheet.write(
@@ -316,7 +326,12 @@ def write_final_formula(workbook: Workbook, worksheet: Worksheet, data:dict):
                     "min_color": 'red',
                     "mid_color": 'yellow',
                     "max_color": 'green',
-                    "mid_value": '50'
+                    "mid_value": '50%',
+                    "max_value": '100%',
+                    "min_value": '0%',
+                    "min_type": 'num',
+                    "mid_type": 'num',
+                    "max_type": 'num'
                     }
             )
         
