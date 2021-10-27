@@ -41,16 +41,29 @@ for subject in getter.get_subjects(): #Iterating over all subjects
                 "gen_date":  datetime.datetime.now().strftime("%d.%m.%Y %H:%M"),
                 "test_question_data": helper.refine_question_data(q_info)
         }
+
         cursor_row, cells_with_students_results, q_num = writer.write_header_info(xlsheet, cursor_row, header_info)
         
+        writer.write_module_questions(xltable, module[0])
 
         print('Getting munipal information..') 
         cells_final = []
+
         for munipal in getter.get_all_munipals(): #get munipal list 
+
+            #TODO: Создавать папку под каждый муниципалитет 
+            #TODO: перенести создание файла в муниципалитет 
+            #TODO: В муниципалитете создавать под каждый модуль отдельный файл 
+
             cells_munipal_level, cursor_row = writer.write_munipal_info(xltable, xlsheet, cursor_row, {'mcode': munipal[0]}) #write munipal information 
             #^ remember the cells for generating formulas for statistics 
             cells_munipal_schools = []
             isSchoolListEmpty = True #Flag for checking if returned list is empty, i.e. if munipal has not participated in testing 
+
+            # | 
+            # | 
+            # | 
+
             for school in getter.get_schools_by_mo_in_results(munipal[0]): #get active schools of current munipal 
                 print(f'Writing school {school[2]}')
                 isSchoolListEmpty = False
@@ -114,6 +127,7 @@ for subject in getter.get_subjects(): #Iterating over all subjects
                     })
                 cells_munipal_schools.append(cells_munipal_school)
                 print('Done!')
+
             #write munipal stat, get cells for 
             cell_final = writer.write_munipal_formula(xltable, xlsheet, {
                 "q_num":       q_num,
@@ -122,6 +136,7 @@ for subject in getter.get_subjects(): #Iterating over all subjects
                 })
             print(f'Done writing munipal {munipal[1]}')
             cells_final.append(cell_final)
+
         #write formulas for unified stats 
         writer.write_final_formula(xltable, xlsheet, {
             "cells": cells_final,
@@ -130,4 +145,5 @@ for subject in getter.get_subjects(): #Iterating over all subjects
             })
         xltable.close() #close file 
         break
+
     break

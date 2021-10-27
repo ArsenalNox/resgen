@@ -272,6 +272,22 @@ def get_class_info(cid:int) -> list:
     sqlCon.close()
     return result
 
+
+def get_module_questions(mid:int):
+    sqlCon, cur = create_database_connection()
+    sql = f"""
+    SELECT 
+        *
+    FROM modules_questions 
+    WHERE 
+        mid = {mid} 
+    """
+    cur.execute(sql)
+    result = cur.fetchall()
+    sqlCon.close()
+    return result
+
+
 if __name__ == '__main__':
     print(get_subjects())
     for subj in get_subjects():

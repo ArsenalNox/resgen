@@ -77,6 +77,7 @@ def write_munipal_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int
         
     return cell, cursor_row
 
+
 def write_school_info(workbook: Workbook ,worksheet: Worksheet, cursor_row: int, data:dict) -> Tuple[str, int]:
     """
     Записывает информацию о школе 
@@ -179,6 +180,7 @@ def write_class_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int, 
 
 
     return cells, cursor_row
+
 
 def write_class_formula(workbook: Workbook, worksheet: Worksheet, cursor_row: int, data:dict):
     """
@@ -347,6 +349,7 @@ def write_final_formula(workbook: Workbook, worksheet: Worksheet, data:dict):
 
     return 
 
+
 def increment_cell_col(cell:str, increment:int) -> str:
     row, col = xl_cell_to_rowcol(cell)
     col += increment
@@ -379,6 +382,13 @@ def increment_cell_col_array(cells:list, increment:int) -> list[str]:
         arr_new.append(increment_cell_col(cell, increment))
 
     return arr_new
+
+
+def write_module_questions(workbook: Workbook, module_id:int):
+    #Создать новый лист в файле, записать туда все вопросы модуля 
+    
+
+    return 
 
 
 if __name__ == '__main__':
