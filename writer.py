@@ -36,9 +36,9 @@ def write_header_info(worksheet: Worksheet, cursor_row:int, data:dict) -> Tuple[
 
     worksheet.write(cursor_row, 0, data['test_name'])
     worksheet.write(cursor_row, 1, data['gen_date'])
-    worksheet.write(cursor_row+1, 1, '% выполнения')
-    worksheet.write(cursor_row+2, 1, 'Всего правильных')
-    worksheet.write(cursor_row+3, 1, 'Всего неправильных')
+    #worksheet.write(cursor_row+1, 1, '% выполнения')
+    #worksheet.write(cursor_row+2, 1, 'Всего правильных')
+    #worksheet.write(cursor_row+3, 1, 'Всего неправильных')
 
     working_col = 3
 
@@ -47,7 +47,10 @@ def write_header_info(worksheet: Worksheet, cursor_row:int, data:dict) -> Tuple[
     cell = xl_rowcol_to_cell(start_row, start_col)
 
     q_num = 0
+    q_max = len(data['test_question_data'])
     for q_info in data['test_question_data']:
+        if q_max == q_num+1:
+            break
         worksheet.write(cursor_row, working_col, data['test_question_data'][q_info]['q_type'])
         working_col+=1 
         q_num+=1
@@ -126,6 +129,8 @@ def write_result_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int,
     cell_start = str(xl_rowcol_to_cell(cursor_row, cursor_col+1))
 
     for answer in data['answers']: #Writing answer given by student
+        if data['q_num'] < int(answer):
+            continue
         writen_results.append(answer)
         worksheet.write(cursor_row, cursor_col+int(answer), data['answers'][answer])
     

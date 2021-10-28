@@ -43,6 +43,7 @@ for subject in getter.get_subjects(): #Iterating over all subjects
             xltable, xlsheet= writer.create_xlsx_table(mundirname+'/'+worksheet_name)
 
             qnum, q_info = getter.get_question_test_data(module[0])
+            qnum = qnum - 1 #Последний вопрос каждого модуля не выдовался - все последние вопросы неправельные 
 
             header_info = { #Information which goes into header row in excel table 
                     "test_name": f'Название теста: {module[3]}',
@@ -73,7 +74,7 @@ for subject in getter.get_subjects(): #Iterating over all subjects
             # | 
 
             for school in getter.get_schools_by_mo_in_results(munipal[0]): #get active schools of current munipal 
-                print(f'    Writing school {school[2]}')
+                print(f'Writing school {school[2]}')
                 isSchoolListEmpty = False
 
                 if len(getter.get_classes_of_school_by_test(school[0], module[0])) == 0:
@@ -146,5 +147,3 @@ for subject in getter.get_subjects(): #Iterating over all subjects
             cells_final.append(cell_final)
 
             xltable.close() #close file 
-        break
-    break
