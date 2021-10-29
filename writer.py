@@ -37,9 +37,9 @@ def write_header_info(worksheet: Worksheet, cursor_row:int, data:dict) -> Tuple[
 
     worksheet.write(cursor_row, 0, data['test_name'])
     worksheet.write(cursor_row, 1, data['gen_date'])
-    worksheet.write(cursor_row+1, 1, '% выполнения')
-    worksheet.write(cursor_row+2, 1, 'Всего правильных')
-    worksheet.write(cursor_row+3, 1, 'Всего неправильных')
+    #worksheet.write(cursor_row+1, 1, '% выполнения')
+    #worksheet.write(cursor_row+2, 1, 'Всего правильных')
+    #worksheet.write(cursor_row+3, 1, 'Всего неправильных')
 
     working_col = 3
 
@@ -48,7 +48,10 @@ def write_header_info(worksheet: Worksheet, cursor_row:int, data:dict) -> Tuple[
     cell = xl_rowcol_to_cell(start_row, start_col)
 
     q_num = 0
+    q_max = len(data['test_question_data'])
     for q_info in data['test_question_data']:
+        if q_max == q_num+1:
+            break
         worksheet.write(cursor_row, working_col, data['test_question_data'][q_info]['q_type'])
         working_col+=1 
         q_num+=1
@@ -98,11 +101,11 @@ def write_school_info(workbook: Workbook ,worksheet: Worksheet, cursor_row: int,
 
     worksheet.write(cursor_row, 1, f'Код школы, {data["s_code"]}')
     worksheet.write(cursor_row, 2, 'процент правильных')
+    worksheet.set_row(cursor_row,   None, format_bold, {'level': 1})
     worksheet.write(cursor_row+1, 1, 'Итого ответов', format_background)
     worksheet.write(cursor_row+2, 1, 'Правильных ответов', format_background)
-
+    
     cell = str(xl_rowcol_to_cell(cursor_row, 2))
-    worksheet.set_row(cursor_row,   None, format_bold)
     worksheet.set_row(cursor_row+1, None, None, {'level': 2})
     worksheet.set_row(cursor_row+2, None, None, {'level': 2})
     cursor_row+=3
@@ -119,7 +122,7 @@ def write_result_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int,
     worksheet.write(cursor_row, cursor_col,   data['class'])
     worksheet.write(cursor_row, cursor_col+1, data['name'])
     
-    worksheet.set_row(cursor_row,   None, None, {'level': 2})
+    worksheet.set_row(cursor_row,   None, None, {'level': 3})
 
     cursor_col+=1
 
@@ -127,6 +130,8 @@ def write_result_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int,
     cell_start = str(xl_rowcol_to_cell(cursor_row, cursor_col+1))
 
     for answer in data['answers']: #Writing answer given by student
+        if data['q_num'] < int(answer):
+            continue
         writen_results.append(answer)
         worksheet.write(cursor_row, cursor_col+int(answer), data['answers'][answer])
     
@@ -167,9 +172,9 @@ def write_class_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int, 
     worksheet.write(cursor_row+1, 2, 'Правильных ответов')
     worksheet.write(cursor_row+2, 2, 'Неправильных ответов')
 
-    worksheet.set_row(cursor_row, None, class_fromat, {'level': 1})
-    worksheet.set_row(cursor_row+1, None, None, {'level': 2})
-    worksheet.set_row(cursor_row+2, None, None, {'level': 2})
+    worksheet.set_row(cursor_row, None, class_fromat, {'level': 3})
+    worksheet.set_row(cursor_row+1, None, None, {'level': 3})
+    worksheet.set_row(cursor_row+2, None, None, {'level': 3})
     
     cells = {}
     cells['class_percent']   = xl_rowcol_to_cell(cursor_row, 3)

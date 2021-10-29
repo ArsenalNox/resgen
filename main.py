@@ -68,10 +68,6 @@ for subject in getter.get_subjects(): #Iterating over all subjects
             cells_munipal_schools = []
             isSchoolListEmpty = True #Flag for checking if returned list is empty, i.e. if munipal has not participated in testing 
 
-            # | 
-            # | 
-            # | 
-
             for school in getter.get_schools_by_mo_in_results(munipal[0]): #get active schools of current munipal 
                 print(f'    Writing school {school[2]}')
                 isSchoolListEmpty = False
@@ -146,5 +142,5 @@ for subject in getter.get_subjects(): #Iterating over all subjects
             cells_final.append(cell_final)
 
             xltable.close() #close file 
-        break
-    break
+
+print(f'asdasdasdasd {time.time()-script_start_time}')
