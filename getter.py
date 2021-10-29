@@ -277,10 +277,13 @@ def get_module_questions(mid:int):
     sqlCon, cur = create_database_connection()
     sql = f"""
     SELECT 
-        *
-    FROM modules_questions 
+        modules_questions.q_num, question_types.name, modules_questions.q_text, modules_questions.q_variant,modules_questions.answ1,modules_questions.answ2,modules_questions.answ3,modules_questions.answ4, modules_questions.correct_answ
+
+    from question_types LEFT JOIN modules_questions on modules_questions.id = question_types.id
+
     WHERE 
-        mid = {mid} 
+        mid = {mid}
+    
     """
     cur.execute(sql)
     result = cur.fetchall()

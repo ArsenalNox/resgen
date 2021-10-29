@@ -2,6 +2,7 @@ from pprint import pprint
 import xlsxwriter
 import os
 import sys
+import getter
 from xlsxwriter.utility   import xl_cell_to_rowcol, xl_rowcol_to_cell 
 
 from xlsxwriter.workbook  import Workbook
@@ -36,9 +37,9 @@ def write_header_info(worksheet: Worksheet, cursor_row:int, data:dict) -> Tuple[
 
     worksheet.write(cursor_row, 0, data['test_name'])
     worksheet.write(cursor_row, 1, data['gen_date'])
-    #worksheet.write(cursor_row+1, 1, '% выполнения')
-    #worksheet.write(cursor_row+2, 1, 'Всего правильных')
-    #worksheet.write(cursor_row+3, 1, 'Всего неправильных')
+    worksheet.write(cursor_row+1, 1, '% выполнения')
+    worksheet.write(cursor_row+2, 1, 'Всего правильных')
+    worksheet.write(cursor_row+3, 1, 'Всего неправильных')
 
     working_col = 3
 
@@ -47,10 +48,7 @@ def write_header_info(worksheet: Worksheet, cursor_row:int, data:dict) -> Tuple[
     cell = xl_rowcol_to_cell(start_row, start_col)
 
     q_num = 0
-    q_max = len(data['test_question_data'])
     for q_info in data['test_question_data']:
-        if q_max == q_num+1:
-            break
         worksheet.write(cursor_row, working_col, data['test_question_data'][q_info]['q_type'])
         working_col+=1 
         q_num+=1
@@ -129,8 +127,6 @@ def write_result_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int,
     cell_start = str(xl_rowcol_to_cell(cursor_row, cursor_col+1))
 
     for answer in data['answers']: #Writing answer given by student
-        if data['q_num'] < int(answer):
-            continue
         writen_results.append(answer)
         worksheet.write(cursor_row, cursor_col+int(answer), data['answers'][answer])
     
@@ -391,10 +387,29 @@ def increment_cell_col_array(cells:list, increment:int) -> list[str]:
 
 def write_module_questions(workbook: Workbook, module_id:int):
     #Создать новый лист в файле, записать туда все вопросы модуля 
+    sheet = workbook.add_worksheet('Вопросы')
+    questions = getter.get_module_questions(module_id)
+    cursor_row = 1
+    sheet.write(0,0, "Номер вопроса")
+    sheet.write(0,1, "Тип вопроса")
+    sheet.write(0,2, "Текст вопроса")
+    sheet.write(0,3, "Вариант")
+    sheet.write(0,4, "Ответ 1")
+    sheet.write(0,5,"Ответ 2")
+    sheet.write(0,6,"Ответ 3")
+    sheet.write(0,7,"Ответ 4")
+    sheet.write(0,8, "Правильный ответ")
     
+    for questions in questions:
+            column = 0            
+            for question_content in questions:
+                sheet.write(cursor_row,column,question_content)
+                column+=1 
 
+            cursor_row +=1        
     return 
 
 
 if __name__ == '__main__':
     sys.exit()
+
