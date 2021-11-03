@@ -9,6 +9,14 @@ from xlsxwriter.workbook  import Workbook
 from xlsxwriter.worksheet import Worksheet
 from typing               import Tuple
 
+
+tree_leves = {
+    'school': 4,
+    'school_classes': 3,
+    'class_results':  2
+}
+
+
 def create_new_report_directory(dirName:str) -> None:
     os.mkdir(f'results/{dirName}')
 
@@ -72,8 +80,8 @@ def write_munipal_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int
     worksheet.write(cursor_row, 1, f'Муниципалитет {data["mcode"]}, % правильных ответов')
     worksheet.write(cursor_row+1, 1, f'Всего правильных')
     worksheet.write(cursor_row+2, 1, f'Всего неправильных')
-    worksheet.set_row(cursor_row+1, None, None, {'level': 2})
-    worksheet.set_row(cursor_row+2, None, None, {'level': 2})
+    worksheet.set_row(cursor_row+1, None, None, {'level': 2, 'collapsed': True})
+    worksheet.set_row(cursor_row+2, None, None, {'level': 2, 'collapsed': True})
     worksheet.set_row(cursor_row, None, format_bold)
 
     cell = str(xl_rowcol_to_cell(cursor_row, 1))
@@ -101,13 +109,13 @@ def write_school_info(workbook: Workbook ,worksheet: Worksheet, cursor_row: int,
 
     worksheet.write(cursor_row, 1, f'Код школы, {data["s_code"]}')
     worksheet.write(cursor_row, 2, 'процент правильных')
-    worksheet.set_row(cursor_row,   None, format_bold, {'level': 1})
+    worksheet.set_row(cursor_row,   None, format_bold, {'level': 1, 'collapsed': True})
     worksheet.write(cursor_row+1, 1, 'Итого ответов', format_background)
     worksheet.write(cursor_row+2, 1, 'Правильных ответов', format_background)
     
     cell = str(xl_rowcol_to_cell(cursor_row, 2))
-    worksheet.set_row(cursor_row+1, None, None, {'level': 2})
-    worksheet.set_row(cursor_row+2, None, None, {'level': 2})
+    worksheet.set_row(cursor_row+1, None, None, {'level': 2, 'collapsed': True})
+    worksheet.set_row(cursor_row+2, None, None, {'level': 2, 'collapsed': True})
     cursor_row+=3
     
     return cell, cursor_row
@@ -122,7 +130,7 @@ def write_result_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int,
     worksheet.write(cursor_row, cursor_col,   data['class'])
     worksheet.write(cursor_row, cursor_col+1, data['name'])
     
-    worksheet.set_row(cursor_row,   None, None, {'level': 3})
+    worksheet.set_row(cursor_row,   None, None, {'level': 3, 'collapsed': True})
 
     cursor_col+=1
 
@@ -172,9 +180,9 @@ def write_class_info(workbook: Workbook, worksheet: Worksheet, cursor_row: int, 
     worksheet.write(cursor_row+1, 2, 'Правильных ответов')
     worksheet.write(cursor_row+2, 2, 'Неправильных ответов')
 
-    worksheet.set_row(cursor_row, None, class_fromat, {'level': 3})
-    worksheet.set_row(cursor_row+1, None, None, {'level': 3})
-    worksheet.set_row(cursor_row+2, None, None, {'level': 3})
+    worksheet.set_row(cursor_row, None, class_fromat, {'level': 2, 'collapsed': True})
+    worksheet.set_row(cursor_row+1, None, None, {'level': 3, 'collapsed': True})
+    worksheet.set_row(cursor_row+2, None, None, {'level': 3, 'collapsed': True})
     
     cells = {}
     cells['class_percent']   = xl_rowcol_to_cell(cursor_row, 3)
@@ -410,7 +418,6 @@ def write_module_questions(workbook: Workbook, module_id:int):
             for question_content in questions:
                 sheet.write(cursor_row,column,question_content)
                 column+=1 
-
             cursor_row +=1        
     return 
 

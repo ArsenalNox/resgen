@@ -2,25 +2,29 @@ import mysql.connector
 from retry_decorator.retry_decorator import retry
 import config
 
+g_requests_count = 0 
+
+sqlConnection = mysql.connector.connect(
+        host=config.host,
+        user=config.user,
+        password=config.password,
+        database=config.database
+        )
+
 @retry(Exception, tries=3, timeout_secs=1)
 def create_database_connection():
+    global sqlConnection, g_requests_count
     """
     Создает подключение к базе данных 
 
     :return: соединение, курсор 
     """
-    
-    sqlConnection= mysql.connector.connect(
-            host=config.host,
-            user=config.user,
-            password=config.password,
-            database=config.database
-            )
-
     return sqlConnection, sqlConnection.cursor()
 
 
 def get_subjects()->list:
+    global g_requests_count
+    g_requests_count+=1 
     """
     Получает список всех предметов из базы данных 
     """
@@ -33,11 +37,12 @@ def get_subjects()->list:
     """
     cur.execute(sql)
     result = cur.fetchall()
-    sqlCon.close()
     return result
 
 
 def get_all_munipals():
+    global g_requests_count
+    g_requests_count+=1 
     """
     Получает список всех муниципалитетов, которые 
     присутствовали на тестировании 
@@ -51,15 +56,17 @@ def get_all_munipals():
     """
     cur.execute(sql)
     result = cur.fetchall()
-    sqlCon.close()
     return result
 
 
 def get_active():
+    global g_requests_count
+    g_requests_count+=1 
     """
     Получает список всех муниципалитетов, которые 
     присутствовали на тестировании 
     """
+    
     
     sqlCon, cur = create_database_connection()
     sql = """
@@ -71,11 +78,12 @@ def get_active():
     """
     cur.execute(sql)
     result = cur.fetchall()
-    sqlCon.close()
     return result
 
 
 def get_schools_by_mo(mo_id:int):
+    global g_requests_count
+    g_requests_count+=1 
     """
     Получает список всех школ конкретного муниципалитета 
     """
@@ -89,11 +97,12 @@ def get_schools_by_mo(mo_id:int):
     """
     cur.execute(sql)
     result = cur.fetchall()
-    sqlCon.close()
     return result
 
 
 def get_schools_by_mo_in_results(mo_id:int):
+    global g_requests_count
+    g_requests_count+=1 
     """
     Получает список всех школ конкретного муниципалитета,
     которые присутствуют в таблице результатов 
@@ -115,11 +124,12 @@ def get_schools_by_mo_in_results(mo_id:int):
     """
     cur.execute(sql)
     result = cur.fetchall()
-    sqlCon.close()
     return result
 
 
 def get_subjects_tests(sbjid:int)->list:
+    global g_requests_count
+    g_requests_count+=1 
     """
     Получает список модулей у предмета 
     """
@@ -133,11 +143,12 @@ def get_subjects_tests(sbjid:int)->list:
     """
     cur.execute(sql)
     result = cur.fetchall()
-    sqlCon.close()
     return result
 
 
 def get_students_resutls_of_school_and_class_by_test(sid:int, cid:int, testid:int):
+    global g_requests_count
+    g_requests_count+=1 
     """
     Получает результаты школы по модулю 
     """
@@ -156,11 +167,12 @@ def get_students_resutls_of_school_and_class_by_test(sid:int, cid:int, testid:in
     """
     cur.execute(sql)
     result = cur.fetchall()
-    sqlCon.close()
     return result
 
 
 def get_test_results_by_uid(uid:str):
+    global g_requests_count
+    g_requests_count+=1 
     """
     Получает резульаты конкретного модуля 
     """
@@ -175,12 +187,13 @@ def get_test_results_by_uid(uid:str):
     """
     cur.execute(sql)
     result = cur.fetchall()
-    sqlCon.close()
 
     return result
 
 
 def get_question_test_data(mid:int):
+    global g_requests_count
+    g_requests_count+=1 
     """
     Получает информацию о вопросах теста 
     """
@@ -209,11 +222,12 @@ def get_question_test_data(mid:int):
     """
     cur.execute(sql)
     result = cur.fetchall()
-    sqlCon.close()
     return qnum, result
 
 
 def get_student_detailed_info(sid:int):
+    global g_requests_count
+    g_requests_count+=1 
     """
     Получить информацию о студенте 
     """
@@ -229,10 +243,11 @@ def get_student_detailed_info(sid:int):
 
     cur.execute(sql)
     result = cur.fetchall()
-    sqlCon.close()
     return result
 
 def get_classes_of_school_by_test(sid:int, testid:int):
+    global g_requests_count
+    g_requests_count+=1 
     """
     Получает все классы, которые решали данный тест от школы 
     """
@@ -250,11 +265,12 @@ def get_classes_of_school_by_test(sid:int, testid:int):
     """
     cur.execute(sql)
     result = cur.fetchall()
-    sqlCon.close()
     return result
 
 
 def get_class_info(cid:int) -> list:
+    global g_requests_count
+    g_requests_count+=1 
     """
     Получает все классы, которые решали данный тест от школы 
     """
@@ -269,17 +285,27 @@ def get_class_info(cid:int) -> list:
     """
     cur.execute(sql)
     result = cur.fetchall()
-    sqlCon.close()
     return result
 
 
 def get_module_questions(mid:int):
+    global g_requests_count
+    g_requests_count+=1 
     sqlCon, cur = create_database_connection()
     sql = f"""
     SELECT 
-        modules_questions.q_num, question_types.name, modules_questions.q_text, modules_questions.q_variant,modules_questions.answ1,modules_questions.answ2,modules_questions.answ3,modules_questions.answ4, modules_questions.correct_answ
+        modules_questions.q_num, 
+        question_types.name, 
+        modules_questions.q_text, 
+        modules_questions.q_variant,
+        modules_questions.answ1,
+        modules_questions.answ2,
+        modules_questions.answ3,
+        modules_questions.answ4, 
+        modules_questions.correct_answ
 
-    from question_types LEFT JOIN modules_questions on modules_questions.id = question_types.id
+    from question_types 
+    LEFT JOIN modules_questions on modules_questions.q_type = question_types.id
 
     WHERE 
         mid = {mid}
@@ -287,7 +313,6 @@ def get_module_questions(mid:int):
     """
     cur.execute(sql)
     result = cur.fetchall()
-    sqlCon.close()
     return result
 
 

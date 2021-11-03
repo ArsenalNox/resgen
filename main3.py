@@ -10,11 +10,10 @@ import os
 
 from pprint import pprint
 
-from getter import g_requests_count
-
 script_start_time = time.time()
 print('')
 
+from getter import g_requests_count
 
 #create new report directory
 print('Creating new directory for results...')
@@ -29,45 +28,47 @@ for subject in getter.get_subjects(): #Iterating over all subjects
     print(f'getting subjects tests {subject}\n')
     for module in getter.get_subjects_tests(subject[0]): #Iterating over all modules of subject
 
-
-        cursor_row = 0 #Pointer to current workign row 
-
-        #create new xlsx table for this subject
-        worksheet_name = str(module[3]).replace(' ', '_')
-        xltable, xlsheet= writer.create_xlsx_table(working_directory_name+'/'+worksheet_name)
-
-        qnum, q_info = getter.get_question_test_data(module[0])
-
-        header_info = { #Information which goes into header row in excel table 
-                "test_name": f'Название теста: {module[3]}',
-                "gen_date":  datetime.datetime.now().strftime("%d.%m.%Y %H:%M"),
-                "test_question_data": helper.refine_question_data(q_info)
-        }
-
-        cursor_row, cells_with_students_results, q_num = writer.write_header_info(xlsheet, cursor_row, header_info)
-        
-        writer.write_module_questions(xltable, module[0])
-
         print(f'Getting results for module: {module}\n\n')
-
-        cells_final = []
 
         for munipal in getter.get_all_munipals(): #get munipal list 
 
             print('Getting munipal information..') 
 
-
-            #TODO: Создавать папку под каждый муниципалитет 
-            #TODO: перенести создание файла в муниципалитет 
-            #TODO: В муниципалитете создавать под каждый модуль отдельный файл 
-                
-            
-            cells_munipal_level, cursor_row = writer.write_munipal_info(xltable, xlsheet, cursor_row, {'mcode': munipal[0]}) #write munipal information 
-            #^ remember the cells for generating formulas for statistics 
-            cells_munipal_schools = []
-            isSchoolListEmpty = True #Flag for checking if returned list is empty, i.e. if munipal has not participated in testing 
-
             for school in getter.get_schools_by_mo_in_results(munipal[0]): #get active schools of current munipal 
+
+                mundirname = working_directory_name+'/'+str(munipal[1]).replace(' ', '_')
+                if not os.path.isdir(mundirname):
+                    print(f'Directory {mundirname} does not exist. Creating...')
+                    os.mkdir(mundirname)
+        
+                schooldriname = mundirname+'/'+str(school[2]).replace(' ', '_').replace('\"', '')
+                if not os.path.isdir(schooldriname):
+                    print(f'Directory {schooldriname} does not exist. Creating...')
+                    os.mkdir(schooldriname)
+            
+                cursor_row = 0 #Pointer to current workign row 
+
+                #create new xlsx table for this subject
+                worksheet_name = str(module[3]).replace(' ', '_')
+                xltable, xlsheet= writer.create_xlsx_table(schooldriname+'/'+worksheet_name)
+
+                qnum, q_info = getter.get_question_test_data(module[0])
+
+                header_info = { #Information which goes into header row in excel table 
+                        "test_name": f'Название теста: {module[3]}',
+                        "gen_date":  datetime.datetime.now().strftime("%d.%m.%Y %H:%M"),
+                        "test_question_data": helper.refine_question_data(q_info)
+                }
+
+                cursor_row, cells_with_students_results, q_num = writer.write_header_info(xlsheet, cursor_row, header_info)
+                
+                writer.write_module_questions(xltable, module[0])
+
+                cells_munipal_level, cursor_row = writer.write_munipal_info(xltable, xlsheet, cursor_row, {'mcode': munipal[0]}) #write munipal information 
+                #^ remember the cells for generating formulas for statistics 
+                cells_munipal_schools = []
+                isSchoolListEmpty = True #Flag for checking if returned list is empty, i.e. if munipal has not participated in testing 
+
                 print(f'    Writing school {school[2]}')
                 isSchoolListEmpty = False
 
@@ -131,21 +132,7 @@ for subject in getter.get_subjects(): #Iterating over all subjects
                 cells_munipal_schools.append(cells_munipal_school)
                 print('Done!')
 
-            #write munipal stat, get cells for 
-            cell_final = writer.write_munipal_formula(xltable, xlsheet, {
-                "q_num":       q_num,
-                "school_data": cells_munipal_schools,
-                "mun":         cells_munipal_level
-                })
-            print(f'Done writing munipal {munipal[1]}')
-            cells_final.append(cell_final)
-
-        writer.write_final_formula(xltable, xlsheet, {
-        "cells": cells_final,
-        "start": "D2",
-        "q_num": q_num
-        })
-        xltable.close() #close file
+                xltable.close() #close file
 
 print(f'script run time: {time.time()-script_start_time}s')
 print(f'Requests: {g_requests_count}')

@@ -8,9 +8,9 @@ import writer
 import datetime
 import os 
 
-from pprint import pprint
-
 from getter import g_requests_count
+
+from pprint import pprint
 
 script_start_time = time.time()
 print('')
@@ -29,39 +29,28 @@ for subject in getter.get_subjects(): #Iterating over all subjects
     print(f'getting subjects tests {subject}\n')
     for module in getter.get_subjects_tests(subject[0]): #Iterating over all modules of subject
 
+        print(f'Getting results for module: {module}\n\n')
 
+  
         cursor_row = 0 #Pointer to current workign row 
-
         #create new xlsx table for this subject
         worksheet_name = str(module[3]).replace(' ', '_')
         xltable, xlsheet= writer.create_xlsx_table(working_directory_name+'/'+worksheet_name)
-
         qnum, q_info = getter.get_question_test_data(module[0])
-
         header_info = { #Information which goes into header row in excel table 
                 "test_name": f'Название теста: {module[3]}',
                 "gen_date":  datetime.datetime.now().strftime("%d.%m.%Y %H:%M"),
                 "test_question_data": helper.refine_question_data(q_info)
         }
-
         cursor_row, cells_with_students_results, q_num = writer.write_header_info(xlsheet, cursor_row, header_info)
-        
+
         writer.write_module_questions(xltable, module[0])
 
-        print(f'Getting results for module: {module}\n\n')
-
-        cells_final = []
-
         for munipal in getter.get_all_munipals(): #get munipal list 
-
-            print('Getting munipal information..') 
-
-
-            #TODO: Создавать папку под каждый муниципалитет 
-            #TODO: перенести создание файла в муниципалитет 
-            #TODO: В муниципалитете создавать под каждый модуль отдельный файл 
-                
             
+            print('Getting munipal information..') 
+            cells_final = []
+
             cells_munipal_level, cursor_row = writer.write_munipal_info(xltable, xlsheet, cursor_row, {'mcode': munipal[0]}) #write munipal information 
             #^ remember the cells for generating formulas for statistics 
             cells_munipal_schools = []
@@ -76,7 +65,7 @@ for subject in getter.get_subjects(): #Iterating over all subjects
 
                 cells_school_level, cursor_row = writer.write_school_info(xltable, xlsheet, cursor_row, {'s_code': school[4]})
                 cells_school_classes = []
-                school_result_count = 0
+                school_result_count = 0;
                 cells_class = {}
 
                 for s_class in getter.get_classes_of_school_by_test(school[0], module[0]): #Get all id's of active classes
@@ -141,11 +130,10 @@ for subject in getter.get_subjects(): #Iterating over all subjects
             cells_final.append(cell_final)
 
         writer.write_final_formula(xltable, xlsheet, {
-        "cells": cells_final,
-        "start": "D2",
-        "q_num": q_num
-        })
-        xltable.close() #close file
+            "cells": cells_final,
+            "start": "D2",
+            "q_num": q_num
+            })
+        xltable.close() #close file 
 
 print(f'script run time: {time.time()-script_start_time}s')
-print(f'Requests: {g_requests_count}')
