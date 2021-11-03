@@ -54,18 +54,10 @@ for subject in getter.get_subjects(): #Iterating over all subjects
 
         for munipal in getter.get_all_munipals(): #get munipal list 
             print('Getting munipal information..') 
-            if (getter.get_schools_by_mo_in_results(munipal[0])) == 0:
+            if len(getter.get_schools_by_mo_in_results(munipal[0])) == 0:
                 print('Munipal is empty, skipping...')
                 continue 
 
-
-
-
-            #TODO: Создавать папку под каждый муниципалитет 
-            #TODO: перенести создание файла в муниципалитет 
-            #TODO: В муниципалитете создавать под каждый модуль отдельный файл 
-                
-            
             cells_munipal_level, cursor_row = writer.write_munipal_info(xltable, xlsheet, cursor_row, {'mcode': munipal[0]}) #write munipal information 
             #^ remember the cells for generating formulas for statistics 
             cells_munipal_schools = []
