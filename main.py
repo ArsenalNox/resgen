@@ -53,8 +53,12 @@ for subject in getter.get_subjects(): #Iterating over all subjects
         cells_final = []
 
         for munipal in getter.get_all_munipals(): #get munipal list 
-
             print('Getting munipal information..') 
+            if (getter.get_schools_by_mo_in_results(munipal[0])) == 0:
+                print('Munipal is empty, skipping...')
+                continue 
+
+
 
 
             #TODO: Создавать папку под каждый муниципалитет 
@@ -66,7 +70,6 @@ for subject in getter.get_subjects(): #Iterating over all subjects
             #^ remember the cells for generating formulas for statistics 
             cells_munipal_schools = []
             isSchoolListEmpty = True #Flag for checking if returned list is empty, i.e. if munipal has not participated in testing 
-
             for school in getter.get_schools_by_mo_in_results(munipal[0]): #get active schools of current munipal 
                 print(f'    Writing school {school[2]}')
                 isSchoolListEmpty = False

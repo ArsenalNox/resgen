@@ -382,7 +382,7 @@ def increment_cell_row(cell:str, increment:int) -> str:
     return inc
 
 
-def increment_cell_row_array(cells:list, increment:int) -> list[str]:
+def increment_cell_row_array(cells:list, increment:int):
     arr_new = []
     for cell in cells:
         arr_new.append(increment_cell_row(cell, increment))
@@ -390,7 +390,7 @@ def increment_cell_row_array(cells:list, increment:int) -> list[str]:
     return arr_new
 
 
-def increment_cell_col_array(cells:list, increment:int) -> list[str]:
+def increment_cell_col_array(cells:list, increment:int):
     arr_new = []
     for cell in cells:
         arr_new.append(increment_cell_col(cell, increment))
