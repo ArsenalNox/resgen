@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import time
 from mysql.connector.utils import print_buffer
 
@@ -49,7 +50,7 @@ for subject in getter.get_subjects(): #Iterating over all subjects
                 cursor_row = 0 #Pointer to current workign row 
 
                 #create new xlsx table for this subject
-                worksheet_name = str(module[3]).replace(' ', '_')
+                worksheet_name = str(module[3]).replace(' ', '_')+f"_{module[1]}_класс"
                 xltable, xlsheet= writer.create_xlsx_table(schooldriname+'/'+worksheet_name)
 
                 qnum, q_info = getter.get_question_test_data(module[0])

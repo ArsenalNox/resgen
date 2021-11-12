@@ -101,14 +101,13 @@ def get_schools_by_mo(mo_id:int):
 
 
 def get_schools_by_mo_in_results(mo_id:int):
-    global g_requests_count
-    g_requests_count+=1 
     """
     Получает список всех школ конкретного муниципалитета,
     которые присутствуют в таблице результатов 
     """
-
-    sqlCon, cur = create_database_connection()
+    global g_requests_count
+    g_requests_count+=1 
+    cur = create_database_connection()[1]
     sql = f"""
     SELECT 
         * 
